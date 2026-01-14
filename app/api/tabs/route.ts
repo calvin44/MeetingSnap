@@ -5,29 +5,33 @@ import type { docs_v1 } from 'googleapis'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
+  const startTime = Date.now()
   const docId = process.env.MASTER_DOC_ID
+
   try {
+    // 1. CONFIGURATION VALIDATION
     if (!docId) {
-      console.error('[CONFIG_ERROR]: MASTER_DOC_ID is missing')
+      logger.error('CRITICAL: MASTER_DOC_ID environment variable is missing')
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
     }
 
     const { docs } = await getGoogleClient()
 
+    // 2. DATA RETRIEVAL
+    // Optimization: Only request tab metadata, not the actual document content
     const { data } = await docs.documents.get({
       documentId: docId,
       includeTabsContent: true,
+      fields: 'tabs(tabProperties(tabId,title),documentTab)',
     })
 
-    // LOG: Debug - Useful for performance monitoring
-    const tabCount = data.tabs?.length || 0
-    logger.debug({ tabCount }, 'Retrieved raw tab data from Google')
-
     if (!data.tabs) {
-      logger.warn({ docId }, 'Document returned no tabs')
+      logger.warn({ docId }, 'Document returned no tab structure')
       return NextResponse.json([])
     }
 
+    // 3. DATA TRANSFORMATION
+    // Filter out malformed tabs and map to internal TabMetadata type
     const tabList: TabMetadata[] = data.tabs
       .filter(
         (tab): tab is docs_v1.Schema$Tab & { tabProperties: { tabId: string } } =>
@@ -39,27 +43,32 @@ export async function GET() {
         hasContent: !!tab.documentTab,
       }))
 
-    // LOG: Milestone - Success
-    logger.info({ count: tabList.length }, 'Successfully processed top-level tabs')
+    // 4. OPERATIONAL LOGGING
+    logger.info(
+      {
+        count: tabList.length,
+        duration: Date.now() - startTime,
+      },
+      'Successfully retrieved document tabs',
+    )
 
     return NextResponse.json(tabList)
-  } catch (error: unknown) {
-    const apiError = error as any
-    const statusCode = typeof apiError?.code === 'number' ? apiError.code : 500
-    const isGoogleApiError = apiError?.errors?.[0]?.reason // Google-specific
+  } catch (error: any) {
+    // 5. STRUCTURED ERROR HANDLING
+    const statusCode = error.code || 500
+    const googleReason = error.errors?.[0]?.reason
 
     logger.error(
       {
-        err: error instanceof Error ? error : new Error(String(error)),
+        err: error.message,
         docId,
         statusCode,
-        googleReason: isGoogleApiError,
-        requestPath: '/api/tabs',
+        googleReason,
+        context: 'GET_TABS_ROUTE',
       },
       'Failed to retrieve document structure',
     )
 
-    // Return different messages based on error type
     const userMessage =
       statusCode === 404
         ? 'Document not found'
