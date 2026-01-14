@@ -1,10 +1,14 @@
 import { getGoogleClient } from '@/lib/google'
 import { logger } from '@/lib/logger'
-import { TabMetadata } from '@/lib/types'
+import { ApiErrorResponse, TabMetadata, TabsResponse } from '@/lib/types'
 import type { docs_v1 } from 'googleapis'
 import { NextResponse } from 'next/server'
 
-export async function GET() {
+/**
+ * GET: Retrieves a list of tabs from the Master Google Doc.
+ * Uses strict union typing for robust frontend integration.
+ */
+export async function GET(): Promise<NextResponse<TabsResponse[] | ApiErrorResponse>> {
   const startTime = Date.now()
   const docId = process.env.MASTER_DOC_ID
 
@@ -12,13 +16,14 @@ export async function GET() {
     // 1. CONFIGURATION VALIDATION
     if (!docId) {
       logger.error('CRITICAL: MASTER_DOC_ID environment variable is missing')
-      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+      const errorPayload: ApiErrorResponse = { error: 'Server configuration error', code: 500 }
+      return NextResponse.json(errorPayload, { status: 500 })
     }
 
     const { docs } = await getGoogleClient()
 
     // 2. DATA RETRIEVAL
-    // Optimization: Only request tab metadata, not the actual document content
+    // Optimization: Requesting only metadata fields to minimize latency and payload size
     const { data } = await docs.documents.get({
       documentId: docId,
       includeTabsContent: true,
@@ -27,11 +32,11 @@ export async function GET() {
 
     if (!data.tabs) {
       logger.warn({ docId }, 'Document returned no tab structure')
-      return NextResponse.json([])
+      return NextResponse.json([]) // Returns empty array as a valid TabsResponse[]
     }
 
     // 3. DATA TRANSFORMATION
-    // Filter out malformed tabs and map to internal TabMetadata type
+    // Type-safe filter to ensure tabId exists before mapping
     const tabList: TabMetadata[] = data.tabs
       .filter(
         (tab): tab is docs_v1.Schema$Tab & { tabProperties: { tabId: string } } =>
@@ -76,6 +81,12 @@ export async function GET() {
         ? 'Permission denied'
         : 'Failed to retrieve document structure'
 
-    return NextResponse.json({ error: userMessage, code: statusCode }, { status: statusCode })
+    const errorResponse: ApiErrorResponse = {
+      error: userMessage,
+      code: statusCode,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    }
+
+    return NextResponse.json(errorResponse, { status: statusCode })
   }
 }

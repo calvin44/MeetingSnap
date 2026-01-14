@@ -1,8 +1,9 @@
 import { getGoogleClient } from '@/lib/google'
 import { logger } from '@/lib/logger'
+import { ExportResponse } from '@/lib/types'
 import { NextResponse } from 'next/server'
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<NextResponse<ExportResponse>> {
   const startTime = Date.now()
   let tempDocId: string | undefined = undefined
   let driveClient: any = null
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
       'Tab export completed successfully',
     )
 
-    return NextResponse.json({ html: htmlContent })
+    return NextResponse.json({ html: htmlContent, tabId })
   } catch (error: any) {
     // Standardize Google API error logging
     const statusCode = error.code || 500
