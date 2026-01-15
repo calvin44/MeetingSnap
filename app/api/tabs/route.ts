@@ -2,6 +2,7 @@ import { getGoogleClient } from '@/lib/google'
 import { logger } from '@/lib/logger'
 import { ApiErrorResponse, TabMetadata, TabsResponse } from '@/lib/types'
 import type { docs_v1 } from 'googleapis'
+import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 
 /**
@@ -9,6 +10,12 @@ import { NextResponse } from 'next/server'
  * Uses strict union typing for robust frontend integration.
  */
 export async function GET(): Promise<NextResponse<TabsResponse[] | ApiErrorResponse>> {
+  const session = await getServerSession()
+
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const startTime = Date.now()
   const docId = process.env.MASTER_DOC_ID
 

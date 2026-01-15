@@ -42,3 +42,7 @@ next-env.d.ts
 
 # credentials
 /credential
+
+# ai-code asist
+GEMINI.md
+.aiexclude

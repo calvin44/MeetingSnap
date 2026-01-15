@@ -1,9 +1,16 @@
 import { getGoogleClient } from '@/lib/google'
 import { logger } from '@/lib/logger'
 import { ExportResponse } from '@/lib/types'
+import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request): Promise<NextResponse<ExportResponse>> {
+  const session = await getServerSession()
+
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const startTime = Date.now()
   let tempDocId: string | undefined = undefined
   let driveClient: any = null

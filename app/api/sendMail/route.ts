@@ -1,6 +1,7 @@
 import { cleanGoogleHtml, wrapWithBranding } from '@/lib/email-template'
 import { logger } from '@/lib/logger'
 import { ApiErrorResponse, SendEmailRequest, SendEmailResponse } from '@/lib/types'
+import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
@@ -10,6 +11,12 @@ import nodemailer from 'nodemailer'
 export async function POST(
   req: Request,
 ): Promise<NextResponse<SendEmailResponse | ApiErrorResponse>> {
+  const session = await getServerSession()
+
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const startTime = Date.now()
 
   try {
