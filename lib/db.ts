@@ -71,3 +71,24 @@ export const removeWhitelistedUser = async (id: string): Promise<void> => {
     throw new Error(error.message)
   }
 }
+
+/**
+ * Checks if an email exists in the whitelist.
+ * Optimized for the Auth check (boolean return).
+ * @param {string} email - The email to check.
+ * @returns {Promise<boolean>}
+ */
+export const checkWhitelistedUser = async (email: string): Promise<boolean> => {
+  const { data, error } = await supabase
+    .from('whitelisted_users')
+    .select('email')
+    .eq('email', email)
+    .single()
+
+  if (error || !data) {
+    return false
+  }
+
+  return true
+}
+

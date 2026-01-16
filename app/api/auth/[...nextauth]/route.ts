@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { checkWhitelistedUser } from '@/lib/db'
 import NextAuth from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 
@@ -14,15 +14,10 @@ const handler = NextAuth({
     async signIn({ user }) {
       if (!user.email) return false
 
-      // QUERY SUPABASE: Look for the email in your whitelist table
-      const { data, error } = await supabase
-        .from('whitelisted_users')
-        .select('email')
-        .eq('email', user.email)
-        .single()
+      // Use isolated DB logic
+      const isAllowed = await checkWhitelistedUser(user.email)
 
-      // If there's an error or no data, the user is NOT on the list
-      if (error || !data) {
+      if (!isAllowed) {
         console.warn(`Blocked unauthorized login: ${user.email}`)
         return false
       }
