@@ -44,11 +44,15 @@ export async function GET(): Promise<NextResponse<TabsResponse[] | ApiErrorRespo
 
     // 3. DATA TRANSFORMATION
     // Type-safe filter to ensure tabId exists before mapping
+    const EXCLUDE_REGEX = /copy.*template/i
     const tabList: TabMetadata[] = data.tabs
-      .filter(
-        (tab): tab is docs_v1.Schema$Tab & { tabProperties: { tabId: string } } =>
-          !!tab.tabProperties?.tabId,
-      )
+      .filter((tab): tab is docs_v1.Schema$Tab & { tabProperties: { tabId: string } } => {
+        const title = tab.tabProperties?.title || ''
+        const hasId = !!tab.tabProperties?.tabId
+
+        // Filter logic: Must have an ID AND NOT match our exclusion regex
+        return hasId && !EXCLUDE_REGEX.test(title)
+      })
       .map((tab) => ({
         id: tab.tabProperties.tabId,
         title: tab.tabProperties.title || 'Untitled Tab',
