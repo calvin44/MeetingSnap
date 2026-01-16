@@ -1,6 +1,7 @@
+import { TabMetadata } from '../types'
 import { headers } from 'next/headers'
 
-export async function getDocumentTabs() {
+export async function getDocumentTabs(): Promise<TabMetadata[]> {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
 
   try {

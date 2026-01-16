@@ -69,14 +69,15 @@ export async function GET(): Promise<NextResponse<TabsResponse[] | ApiErrorRespo
     )
 
     return NextResponse.json(tabList)
-  } catch (error: any) {
+  } catch (error: unknown) {
     // 5. STRUCTURED ERROR HANDLING
-    const statusCode = error.code || 500
-    const googleReason = error.errors?.[0]?.reason
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    const statusCode = (error as { code?: number })?.code || 500
+    const googleReason = (error as any)?.errors?.[0]?.reason
 
     logger.error(
       {
-        err: error.message,
+        err: message,
         docId,
         statusCode,
         googleReason,
@@ -89,13 +90,13 @@ export async function GET(): Promise<NextResponse<TabsResponse[] | ApiErrorRespo
       statusCode === 404
         ? 'Document not found'
         : statusCode === 403
-        ? 'Permission denied'
-        : 'Failed to retrieve document structure'
+          ? 'Permission denied'
+          : 'Failed to retrieve document structure'
 
     const errorResponse: ApiErrorResponse = {
       error: userMessage,
       code: statusCode,
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      details: process.env.NODE_ENV === 'development' ? message : undefined,
     }
 
     return NextResponse.json(errorResponse, { status: statusCode })

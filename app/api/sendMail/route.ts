@@ -66,21 +66,22 @@ export async function POST(
       success: true,
       messageId: info.messageId,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
     logger.error(
       {
-        err: error.message,
+        err: message,
         context: 'SENDMAIL_ROUTE',
       },
       'SMTP Transmission failed',
     )
 
-    const statusCode = error.responseCode || 500
+    const statusCode = (error as { responseCode?: number })?.responseCode || 500
 
     return NextResponse.json(
       {
         error: 'Failed to send email via SMTP',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        details: process.env.NODE_ENV === 'development' ? message : undefined,
       },
       { status: statusCode },
     )

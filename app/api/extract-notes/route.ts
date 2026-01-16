@@ -1,6 +1,7 @@
 import { getGoogleClient } from '@/lib/google'
 import { logger } from '@/lib/logger'
 import { ExportResponse } from '@/lib/types'
+import type { docs_v1, drive_v3 } from 'googleapis'
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 
@@ -13,7 +14,7 @@ export async function POST(req: Request): Promise<NextResponse<ExportResponse>> 
 
   const startTime = Date.now()
   let tempDocId: string | undefined = undefined
-  let driveClient: any = null
+  let driveClient: drive_v3.Drive | null = null
 
   try {
     // 1. INPUT VALIDATION & CONFIGURATION CHECK
@@ -63,12 +64,12 @@ export async function POST(req: Request): Promise<NextResponse<ExportResponse>> 
       .filter((id): id is string => !!id && id !== tabId)
       .map((id) => ({
         deleteTab: { tabId: id },
-      }))
+      } as docs_v1.Schema$Request))
 
     if (deleteRequests.length > 0) {
       await docs.documents.batchUpdate({
         documentId: tempDocId,
-        requestBody: { requests: deleteRequests as any },
+        requestBody: { requests: deleteRequests },
       })
       logger.debug({ count: deleteRequests.length }, 'Pruned unwanted tabs from buffer')
     }
@@ -92,12 +93,14 @@ export async function POST(req: Request): Promise<NextResponse<ExportResponse>> 
     )
 
     return NextResponse.json({ html: htmlContent, tabId })
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Standardize Google API error logging
-    const statusCode = error.code || 500
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    const statusCode = (error as { code?: number })?.code || 500
     logger.error(
       {
-        err: error.message,
+        err: message,
+        docId: tempDocId,
         code: statusCode,
         context: 'EXPORT_ROUTE',
       },
