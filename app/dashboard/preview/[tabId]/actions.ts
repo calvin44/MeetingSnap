@@ -31,7 +31,7 @@ export async function sendEmailAction(
 
     try {
         const info = await sendMeetingMinutesEmail({
-            to: 'calvin@iscoollab.com',
+            to: 'all@iscoollab.com',
             subject: `✨ Meeting Minutes: ${data.tabTitle} - ${date}`,
             html: data.html,
             tabTitle: data.tabTitle,
