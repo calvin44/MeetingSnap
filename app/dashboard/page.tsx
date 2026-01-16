@@ -8,59 +8,62 @@ export default async function DashboardPage() {
   const tabs = await getDocumentTabs()
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">
             Meeting Documents
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-slate-500 font-medium text-lg">
             Select a tab to extract meeting notes and summaries.
           </p>
         </div>
-        <div className="text-sm font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
+        <div className="hidden md:flex items-center gap-2 text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 shadow-sm">
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
           {tabs.length} Tabs Available
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {tabs.length > 0 ? (
           tabs.map((tab) => (
             <div
               key={tab.id}
-              className="group relative bg-white border border-slate-200 rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:-translate-y-1"
+              className="group relative bg-white border border-slate-200 rounded-[2rem] p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 ring-1 ring-slate-100"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="bg-blue-50 p-3 rounded-xl group-hover:bg-blue-600 transition-colors duration-300">
-                  <FileText className="w-6 h-6 text-blue-600 group-hover:text-white" />
+              <div className="flex items-start justify-between mb-6">
+                <div className="bg-slate-50 p-4 rounded-2xl group-hover:bg-blue-600 group-hover:scale-110 transition-all duration-500 shadow-sm">
+                  <FileText className="w-6 h-6 text-slate-400 group-hover:text-white transition-colors" />
                 </div>
-                <button className="text-slate-300 hover:text-slate-600 transition-colors">
+                <button className="text-slate-300 hover:text-slate-600 transition-colors p-2 hover:bg-slate-50 rounded-lg">
                   <ExternalLink className="w-4 h-4" />
                 </button>
               </div>
 
-              <h3 className="font-bold text-lg text-slate-800 mb-1 group-hover:text-blue-600 transition-colors truncate">
+              <h3 className="font-extrabold text-xl text-slate-900 mb-2 group-hover:text-blue-600 transition-colors truncate tracking-tight">
                 {tab.title}
               </h3>
-              <p className="text-xs font-mono text-slate-400 mb-6">
-                ID: {tab.id.substring(0, 8)}...
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-8 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
+                ID: {tab.id.substring(0, 8)}
               </p>
 
               <Link
                 href={`/dashboard/preview/${tab.id}?title=${encodeURIComponent(tab.title)}`}
-                className="flex items-center justify-center gap-2 w-full bg-slate-900 text-white font-semibold py-3 rounded-xl hover:bg-slate-800 active:scale-[0.98] transition-all"
+                className="flex items-center justify-center gap-2 w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-blue-600 active:scale-[0.98] transition-all shadow-lg hover:shadow-blue-600/25"
               >
-                Preview
+                Preview Document
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           ))
         ) : (
-          <div className="col-span-full flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-            <div className="bg-slate-50 p-4 rounded-full mb-4">
-              <FileText className="w-8 h-8 text-slate-300" />
+          <div className="col-span-full flex flex-col items-center justify-center py-32 bg-white rounded-[3rem] border-2 border-dashed border-slate-200 shadow-inner">
+            <div className="bg-slate-50 p-8 rounded-full mb-6">
+              <FileText className="w-12 h-12 text-slate-300" />
             </div>
-            <p className="text-slate-500 font-medium">No tabs found in this document.</p>
+            <p className="text-xl text-slate-500 font-bold tracking-tight">No tabs found in this document.</p>
+            <p className="text-slate-400 mt-2">Try refreshing the connection or checking your document.</p>
           </div>
         )}
       </div>

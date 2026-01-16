@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
+import { Outfit } from 'next/font/google'
 import { Toaster } from 'sonner'
 import './globals.css'
+
+const outfit = Outfit({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'MeetingSnap',
@@ -14,7 +17,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
+      <body className={outfit.className} suppressHydrationWarning>
         {children}
         <Toaster richColors position="top-right" />
       </body>
