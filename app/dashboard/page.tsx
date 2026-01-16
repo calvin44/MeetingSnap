@@ -1,5 +1,8 @@
 import { getDocumentTabs } from '@/lib/services/tabs'
 import { ArrowRight, ExternalLink, FileText } from 'lucide-react'
+import Link from 'next/link'
+
+export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const tabs = await getDocumentTabs()
@@ -25,7 +28,7 @@ export default async function DashboardPage() {
           tabs.map((tab) => (
             <div
               key={tab.id}
-              className="cursor-pointer group relative bg-white border border-slate-200 rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:-translate-y-1"
+              className="group relative bg-white border border-slate-200 rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:-translate-y-1"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="bg-blue-50 p-3 rounded-xl group-hover:bg-blue-600 transition-colors duration-300">
@@ -40,13 +43,16 @@ export default async function DashboardPage() {
                 {tab.title}
               </h3>
               <p className="text-xs font-mono text-slate-400 mb-6">
-                DOC_ID: {tab.id.substring(0, 8)}...
+                ID: {tab.id.substring(0, 8)}...
               </p>
 
-              <button className="cursor-pointer flex items-center justify-center gap-2 w-full bg-slate-900 text-white font-semibold py-3 rounded-xl hover:bg-slate-800 active:scale-[0.98] transition-all">
-                Extract Notes
+              <Link
+                href={`/dashboard/preview/${tab.id}?title=${encodeURIComponent(tab.title)}`}
+                className="flex items-center justify-center gap-2 w-full bg-slate-900 text-white font-semibold py-3 rounded-xl hover:bg-slate-800 active:scale-[0.98] transition-all"
+              >
+                Preview
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Link>
             </div>
           ))
         ) : (

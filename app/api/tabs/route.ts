@@ -1,13 +1,13 @@
-import { getGoogleClient } from '@/lib/google'
-import { logger } from '@/lib/logger'
-import { ApiErrorResponse, TabMetadata, TabsResponse } from '@/lib/types'
-import type { docs_v1 } from 'googleapis'
+import { getDocumentTabs } from '@/lib/services/tabs'
+import { ApiErrorResponse, TabsResponse } from '@/lib/types'
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET: Retrieves a list of tabs from the Master Google Doc.
- * Uses strict union typing for robust frontend integration.
+ * Now a thin wrapper around the shared service function.
  */
 export async function GET(): Promise<NextResponse<TabsResponse[] | ApiErrorResponse>> {
   const session = await getServerSession()
@@ -16,89 +16,14 @@ export async function GET(): Promise<NextResponse<TabsResponse[] | ApiErrorRespo
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const startTime = Date.now()
-  const docId = process.env.MASTER_DOC_ID
-
   try {
-    // 1. CONFIGURATION VALIDATION
-    if (!docId) {
-      logger.error('CRITICAL: MASTER_DOC_ID environment variable is missing')
-      const errorPayload: ApiErrorResponse = { error: 'Server configuration error', code: 500 }
-      return NextResponse.json(errorPayload, { status: 500 })
-    }
-
-    const { docs } = await getGoogleClient()
-
-    // 2. DATA RETRIEVAL
-    // Optimization: Requesting only metadata fields to minimize latency and payload size
-    const { data } = await docs.documents.get({
-      documentId: docId,
-      includeTabsContent: true,
-      fields: 'tabs(tabProperties(tabId,title),documentTab)',
-    })
-
-    if (!data.tabs) {
-      logger.warn({ docId }, 'Document returned no tab structure')
-      return NextResponse.json([]) // Returns empty array as a valid TabsResponse[]
-    }
-
-    // 3. DATA TRANSFORMATION
-    // Type-safe filter to ensure tabId exists before mapping
-    const EXCLUDE_REGEX = /copy.*template/i
-    const tabList: TabMetadata[] = data.tabs
-      .filter((tab): tab is docs_v1.Schema$Tab & { tabProperties: { tabId: string } } => {
-        const title = tab.tabProperties?.title || ''
-        const hasId = !!tab.tabProperties?.tabId
-
-        // Filter logic: Must have an ID AND NOT match our exclusion regex
-        return hasId && !EXCLUDE_REGEX.test(title)
-      })
-      .map((tab) => ({
-        id: tab.tabProperties.tabId,
-        title: tab.tabProperties.title || 'Untitled Tab',
-        hasContent: !!tab.documentTab,
-      }))
-
-    // 4. OPERATIONAL LOGGING
-    logger.info(
-      {
-        count: tabList.length,
-        duration: Date.now() - startTime,
-      },
-      'Successfully retrieved document tabs',
-    )
-
+    const tabList = await getDocumentTabs()
     return NextResponse.json(tabList)
   } catch (error: unknown) {
-    // 5. STRUCTURED ERROR HANDLING
     const message = error instanceof Error ? error.message : 'Unknown error'
-    const statusCode = (error as { code?: number })?.code || 500
-    const googleReason = (error as any)?.errors?.[0]?.reason
-
-    logger.error(
-      {
-        err: message,
-        docId,
-        statusCode,
-        googleReason,
-        context: 'GET_TABS_ROUTE',
-      },
-      'Failed to retrieve document structure',
+    return NextResponse.json(
+      { error: 'Failed to retrieve document structure', details: message },
+      { status: 500 },
     )
-
-    const userMessage =
-      statusCode === 404
-        ? 'Document not found'
-        : statusCode === 403
-          ? 'Permission denied'
-          : 'Failed to retrieve document structure'
-
-    const errorResponse: ApiErrorResponse = {
-      error: userMessage,
-      code: statusCode,
-      details: process.env.NODE_ENV === 'development' ? message : undefined,
-    }
-
-    return NextResponse.json(errorResponse, { status: statusCode })
   }
 }

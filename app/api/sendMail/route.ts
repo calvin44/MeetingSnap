@@ -1,12 +1,13 @@
-import { cleanGoogleHtml, wrapWithBranding } from '@/lib/email-template'
-import { logger } from '@/lib/logger'
+import { sendMeetingMinutesEmail } from '@/lib/services/email'
 import { ApiErrorResponse, SendEmailRequest, SendEmailResponse } from '@/lib/types'
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
+
+export const dynamic = 'force-dynamic'
 
 /**
- * POST: Sends the exported HTML content via Gmail SMTP using an App Password.
+ * POST: Sends the exported HTML content via Gmail SMTP.
+ * Now a thin wrapper around the shared email service.
  */
 export async function POST(
   req: Request,
@@ -17,16 +18,9 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const startTime = Date.now()
-
   try {
-    // 1. DATA EXTRACTION & VALIDATION
     const body: SendEmailRequest = await req.json()
     const { to, subject, tabTitle, html } = body
-
-    // Wrap the raw Google HTML with our app branding
-    const sanitized = cleanGoogleHtml(html, tabTitle)
-    const brandedHtml = wrapWithBranding(sanitized)
 
     if (!to || !subject || !html) {
       return NextResponse.json(
@@ -35,32 +29,7 @@ export async function POST(
       )
     }
 
-    // 2. TRANSPORTER INITIALIZATION
-    // Gmail works best on port 587 with STARTTLS (secure: false).
-    const transporter = nodemailer.createTransport({
-      service: 'gmail', // Shortcut for host: smtp.gmail.com
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    })
-
-    // 3. EMAIL EXECUTION
-    const info = await transporter.sendMail({
-      from: `"MeetingSnap" <${process.env.EMAIL_FROM_ADDRESS}>`,
-      to,
-      subject,
-      html: brandedHtml, // This HTML includes the tables and styling from Google Docs
-    })
-
-    logger.info(
-      {
-        messageId: info.messageId,
-        to,
-        duration: `${Date.now() - startTime} ms`,
-      },
-      'Email dispatched successfully via Gmail App Password',
-    )
+    const info = await sendMeetingMinutesEmail({ to, subject, tabTitle, html })
 
     return NextResponse.json({
       success: true,
@@ -68,21 +37,10 @@ export async function POST(
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error'
-    logger.error(
-      {
-        err: message,
-        context: 'SENDMAIL_ROUTE',
-      },
-      'SMTP Transmission failed',
-    )
-
     const statusCode = (error as { responseCode?: number })?.responseCode || 500
 
     return NextResponse.json(
-      {
-        error: 'Failed to send email via SMTP',
-        details: process.env.NODE_ENV === 'development' ? message : undefined,
-      },
+      { error: 'Failed to send email via SMTP', details: message },
       { status: statusCode },
     )
   }

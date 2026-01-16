@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/lib/logger'
 
 /**
  * Interface representing the structure of a whitelisted user in the database.
@@ -20,7 +21,7 @@ export const getWhitelistedUsers = async (): Promise<WhitelistedUser[]> => {
     .order('email', { ascending: true })
 
   if (error) {
-    console.error('Fetch Error:', error.message)
+    logger.error({ err: error.message }, 'Supabase Fetch Error')
     throw new Error('Failed to fetch team members')
   }
 
@@ -37,7 +38,7 @@ export const getWhitelistedUserById = async (id: string): Promise<WhitelistedUse
   const { data, error } = await supabase.from('whitelisted_users').select('*').eq('id', id).single()
 
   if (error) {
-    console.warn(`User with ID ${id} not found:`, error.message)
+    logger.warn({ id, err: error.message }, 'Whitelisted user not found')
     return null
   }
 
