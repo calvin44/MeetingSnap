@@ -1,13 +1,13 @@
+import { MEETING_URL } from "./constants"
+
 export function wrapWithBranding(content: string): string {
-  const meetingMinuteUrl =
-    'https://docs.google.com/document/d/1_fmXMlZSH6m3JvVkd30vJJxVdPdUzyeA3tFXf9MRPHk/edit?tab=t.t2soy69um8x2#heading=h.n4gtjvfjzmt4'
   return `
     <div style="font-family: sans-serif; max-width: 800px; margin: 0 auto; color: #333;">
       <div class="meeting-content">
         ${content}
       </div>
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${meetingMinuteUrl}" 
+        <a href="${MEETING_URL}" 
            style="background-color: #1a73e8; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
            View Full Meeting History
         </a>

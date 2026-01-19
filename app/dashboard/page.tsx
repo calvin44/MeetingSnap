@@ -35,9 +35,6 @@ export default async function DashboardPage() {
                 <div className="bg-slate-50 p-4 rounded-2xl group-hover:bg-blue-600 group-hover:scale-110 transition-all duration-500 shadow-sm">
                   <FileText className="w-6 h-6 text-slate-400 group-hover:text-white transition-colors" />
                 </div>
-                <button className="text-slate-300 hover:text-slate-600 transition-colors p-2 hover:bg-slate-50 rounded-lg">
-                  <ExternalLink className="w-4 h-4" />
-                </button>
               </div>
 
               <h3 className="font-extrabold text-xl text-slate-900 mb-2 group-hover:text-blue-600 transition-colors truncate tracking-tight">

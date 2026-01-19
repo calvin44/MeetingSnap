@@ -1,0 +1,1 @@
+export const MEETING_URL = "https://docs.google.com/document/d/1_fmXMlZSH6m3JvVkd30vJJxVdPdUzyeA3tFXf9MRPHk/edit?tab=t.t2soy69um8x2#heading=h.n4gtjvfjzmt4"
