@@ -19,17 +19,7 @@ export interface ApiErrorResponse {
   details?: string
 }
 
-export interface SendEmailRequest {
-  to: string
-  subject: string
-  html: string
-  tabTitle: string
-}
 
-export interface SendEmailResponse {
-  success: boolean
-  messageId?: string
-}
 
 // Unions
 export type TabsResponse = TabMetadata | ApiErrorResponse

@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionState, sendEmailAction } from './actions'
+import { ActionState, sendEmailAction, getContentAction } from './actions'
 import { AlertCircle, ArrowLeft, Send, CheckCircle2, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -26,31 +26,21 @@ export default function PreviewPage({ params }: PreviewPageProps) {
     // Fetch HTML content based on the unwrapped tabId
     useEffect(() => {
         if (!tabId) return
-        fetchHtml(tabId)
-    }, [tabId])
 
-    const fetchHtml = async (id: string) => {
-        try {
-            const res = await fetch('/api/extract-notes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tabId: id }),
-            })
+        const loadContent = async () => {
+            setLoading(true)
+            const result = await getContentAction(tabId)
 
-            if (!res.ok) {
-                const data = await res.json()
-                throw new Error(data.error || 'Failed to extract content')
+            if ('error' in result) {
+                setError(result.error)
+            } else {
+                setHtml(result.html)
             }
-
-            const data = await res.json()
-            setHtml(data.html)
-        } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : 'Unknown error'
-            setError(message)
-        } finally {
             setLoading(false)
         }
-    }
+
+        loadContent()
+    }, [tabId])
 
     // Handle Send Action
     const sendWithData = sendEmailAction.bind(null, {
@@ -131,7 +121,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
                             <h3 className="text-xl font-bold text-slate-900 mb-2">Extraction Failed</h3>
                             <p className="text-slate-500 max-w-md font-medium leading-relaxed">{error}</p>
                             <button
-                                onClick={() => { setError(null); setLoading(true); fetchHtml(tabId); }}
+                                onClick={() => { setError(null); setLoading(true); window.location.reload(); }}
                                 className="mt-8 bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors active:scale-95 shadow-lg"
                             >
                                 Try Again
