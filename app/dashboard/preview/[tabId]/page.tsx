@@ -129,7 +129,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
                         </div>
                     ) : (
                         <div className="bg-white p-8 md:p-16 rounded-[2rem] shadow-sm border border-slate-100 prose prose-slate max-w-none ring-1 ring-slate-100">
-                            <div dangerouslySetInnerHTML={{ __html: html || '' }} className="preview-content" />
+                            <div dangerouslySetInnerHTML={{ __html: html || '' }} className="preview-content overflow-x-auto" />
                         </div>
                     )}
                 </div>

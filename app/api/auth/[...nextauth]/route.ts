@@ -26,6 +26,20 @@ const handler = NextAuth({
       // Login successful!
       return true
     },
+    async session({ session }) {
+      if (!session.user?.email) return session
+
+      // Check if the user is still whitelisted during the session check
+      const isStillAllowed = await checkWhitelistedUser(session.user.email)
+
+      if (!isStillAllowed) {
+        console.warn(`Marking session as revoked for removed user: ${session.user.email}`)
+        session.error = 'SessionRevoked'
+        return session
+      }
+
+      return session
+    },
   },
   // Custom pages ensure users don't see the default NextAuth UI
   pages: {

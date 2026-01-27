@@ -64,8 +64,12 @@ function LoginContent() {
         {error && (
           <div className="w-full mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 animate-in fade-in zoom-in-95 duration-300">
             <AlertCircle size={20} className="shrink-0" />
-            <p className="text-xs font-bold uppercase tracking-wider text-left">
-              {error === 'AccessDenied' ? 'Whitelisted users only' : 'Authentication failed'}
+            <p className="text-xs font-bold uppercase tracking-wider text-left leading-relaxed">
+              {error === 'SessionRevoked'
+                ? 'Your access has been revoked by an administrator'
+                : error === 'AccessDenied'
+                  ? 'Whitelisted users only'
+                  : 'Authentication failed'}
             </p>
           </div>
         )}
