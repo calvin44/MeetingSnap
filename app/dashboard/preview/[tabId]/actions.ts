@@ -23,16 +23,10 @@ export async function sendEmailAction(
         return { error: 'Unauthorized' }
     }
 
-    const date = new Date().toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    })
-
     try {
-        const info = await sendMeetingMinutesEmail({
-            to: 'all@iscoollab.com',
-            subject: `✨ Meeting Minutes: ${data.tabTitle} - ${date}`,
+        await sendMeetingMinutesEmail({
+            to: process.env.TARGET_USER!,
+            subject: `${data.tabTitle} FAE/PM Weekly Meeting Minutes`,
             html: data.html,
             tabTitle: data.tabTitle,
         })
