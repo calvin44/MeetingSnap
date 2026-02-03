@@ -14,7 +14,6 @@ export function wrapWithBranding(content: string): string {
       </div>
       <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #70757a; text-align: center;">
         <p>This report was automatically generated and sent via <strong>MeetingSnap</strong>.</p>
-        <p>© ${new Date().getFullYear()} MeetingSnap Team. All rights reserved.</p>
       </div>
     </div>
   `

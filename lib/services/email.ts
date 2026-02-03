@@ -34,7 +34,7 @@ export async function sendMeetingMinutesEmail({
 
     // 3. SEND
     const info = await transporter.sendMail({
-        from: `"MeetingSnap" <${env.EMAIL_FROM_ADDRESS}>`,
+        from: env.EMAIL_FROM_ADDRESS,
         to,
         subject,
         html: brandedHtml,
